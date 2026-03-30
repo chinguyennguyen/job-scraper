@@ -21,13 +21,10 @@ Built with Python, Flask, and SQLite.
 ## Screenshots
 
 *Main job tracker*
+![Job Tracker](screenshots/tracker.png)
 
-| Score | Title | Company | City | Status |
-|---|---|---|---|---|
-| 8 | Senior Economist | Spotify | Stockholm | applied |
-| 6 | Data Scientist | Zalando | Berlin | new |
-
-*Stats page includes application funnel, referral breakdown, and applications over time.*
+*Stats page*
+![Stats](screenshots/stats.png)
 
 ---
 
