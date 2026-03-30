@@ -1,0 +1,13 @@
+# Personal data — never publish these
+jobs.db
+config.yaml
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Environment variables (in case you add secrets later)
+.env
+
+# Third-party JS library — users download this themselves
+static/chartjs-chart-sankey.min.js

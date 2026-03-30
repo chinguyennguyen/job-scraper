@@ -1,0 +1,10 @@
+# Personal data — loaded from your hard drive via volume at runtime
+jobs.db
+config.yaml
+
+# Python cache — regenerated automatically
+__pycache__/
+*.pyc
+
+# Git internals — not needed inside the container
+.git

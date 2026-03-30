@@ -1,0 +1,146 @@
+# =============================================================================
+# config.example.yaml — template for your personal config
+# Copy this file to config.yaml and fill in your own values.
+# =============================================================================
+
+
+# -------------------------------------------------------
+# WHAT to search for
+# -------------------------------------------------------
+
+search_terms:
+  - data scientist
+  - data analyst
+  - research scientist
+
+
+# -------------------------------------------------------
+# WHERE to search
+# filter_german: true  → exclude German-language postings
+# filter_swedish: true → exclude Swedish-language postings
+# -------------------------------------------------------
+
+cities:
+  - location: Berlin, Germany
+    country_indeed: germany
+    filter_german: true
+    filter_swedish: false
+
+#  - location: Stockholm, Sweden
+#    country_indeed: sweden
+#    filter_german: false
+#    filter_swedish: true
+
+
+# -------------------------------------------------------
+# OUTPUT
+# -------------------------------------------------------
+
+database: jobs.db
+hours_old: 72
+
+
+# -------------------------------------------------------
+# SCORING
+# Higher score = more relevant = shown first
+# -------------------------------------------------------
+
+scoring:
+
+  # A job must mention at least one of these to appear at all
+  base_keywords:
+    - data scientist
+    - machine learning
+    - research scientist
+
+  # Each match adds +1 to the score
+  priority_keywords:
+    - a/b test
+    - causal inference
+    - experimentation
+    - forecasting
+    - bayesian
+    - phd
+    - economics
+    - statistics
+
+  # These companies get +2 bonus points
+  priority_companies:
+    - google
+    - meta
+    - amazon
+    - spotify
+    - netflix
+
+  # Jobs with these words in the title are excluded immediately
+  negative_title_keywords:
+    - intern
+    - internship
+    - entry level
+    - software engineer
+    - mlops
+
+  # Avoid these companies entirely
+  blocked_companies:
+    - example company
+
+  # Jobs with these words in the title get a score penalty (-3)
+  senior_title_keywords:
+    - principal
+    - vp
+
+
+# -------------------------------------------------------
+# LANGUAGE FILTERING
+# -------------------------------------------------------
+
+language_filters:
+
+  german_words:
+    - wir sind
+    - ihre aufgaben
+    - du hast
+    - wir bieten
+    - stellenbeschreibung
+    - deine aufgaben
+    - unser team
+
+  german_required_phrases:
+    - german is required
+    - german required
+    - fluent in german
+    - fluency in german
+    - proficiency in german
+    - german language skills
+    - german language required
+    - business german
+    - native german
+    - c1 german
+    - c2 german
+    - "german (c"
+    - deutschkenntnisse
+    - deutsch voraussetzung
+
+  swedish_words:
+    - vi söker
+    - vi erbjuder
+    - dina arbetsuppgifter
+    - om oss
+    - vad vi erbjuder
+    - din profil
+    - kvalifikationer
+    - välkommen
+    - ansökan
+    - tjänsten
+    - hos oss
+
+  swedish_required_phrases:
+    - swedish is required
+    - swedish required
+    - fluent in swedish
+    - fluency in swedish
+    - proficiency in swedish
+    - swedish language required
+    - native swedish
+    - svenska krävs
+    - svenska är ett krav
