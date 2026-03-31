@@ -34,6 +34,10 @@
             <label>Applied</label>
             <span>{{ data.funnel.applied }}</span>
         </div>
+        <div class="stat-box">
+            <label>In progress</label>
+            <span>{{ data.funnel.in_progress }}</span>
+        </div>
         <div class="stat-box good">
             <label>Interviewing</label>
             <span>{{ data.funnel.interviewing }}</span>
@@ -60,7 +64,7 @@
 
         <div class="chart-box" style="grid-column: 1 / -1;">
             <h2>Application flow</h2>
-            {% if data.funnel.applied == 0 and data.funnel.interviewing == 0 %}
+            {% if data.funnel.applied == 0 %}
                 <p class="no-data">No applications yet</p>
             {% else %}
                 <canvas id="sankeyChart" style="max-height: 300px;"></canvas>
@@ -89,15 +93,15 @@
 
     <script>
         // Sankey
-        {% set total = data.funnel.applied + data.funnel.interviewing %}
-        {% if total > 0 %}
+        {% if data.funnel.applied > 0 %}
         new Chart(document.getElementById("sankeyChart"), {
             type: "sankey",
             data: {
                 datasets: [{
                     data: [
-                        {% if data.funnel.applied > 0 %}
-                        { from: "Applied", to: "Pending",      flow: {{ [data.funnel.applied - data.ghosted, 0] | max }} },
+                        {% set pending = data.funnel.in_progress - data.funnel.interviewing %}
+                        {% if pending > 0 %}
+                        { from: "Applied", to: "Pending",      flow: {{ pending }} },
                         {% endif %}
                         {% if data.ghosted > 0 %}
                         { from: "Applied", to: "Ghosted",      flow: {{ data.ghosted }} },
@@ -110,12 +114,6 @@
                         {% endif %}
                         {% if data.funnel.offer > 0 %}
                         { from: "Interviewing", to: "Offer",   flow: {{ data.funnel.offer }} },
-                        {% endif %}
-                        {% if data.funnel.rejected > 0 %}
-                        { from: "Applied", to: "Rejected",  flow: {{ data.funnel.rejected }} },
-                        {% endif %}
-                        {% if data.funnel.rejected_after_interview > 0 %}
-                        { from: "Interviewing", to: "Rejected",  flow: {{ data.funnel.rejected_after_interview }} },
                         {% endif %}
                     ],
                     colorFrom: () => "#94a3b8",

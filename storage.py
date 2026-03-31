@@ -151,28 +151,61 @@ def age_unreviewed():
 
 def get_stats():
     with get_connection() as conn:
-        total        = conn.execute("SELECT COUNT(*) FROM jobs").fetchone()[0]
-        applied      = conn.execute("SELECT COUNT(*) FROM jobs WHERE status = 'applied'").fetchone()[0]
-        interviewing = conn.execute("SELECT COUNT(*) FROM jobs WHERE status = 'interviewing'").fetchone()[0]
-        avg_score    = conn.execute("SELECT ROUND(AVG(score), 0) FROM jobs").fetchone()[0]
+        applied = conn.execute("""
+            SELECT COUNT(*) FROM jobs
+            WHERE status NOT IN ('new', 'ignored', 'ghosted', 'hidden')
+            AND hidden = 0
+        """).fetchone()[0]
+        in_progress = conn.execute("""
+            SELECT COUNT(*) FROM jobs
+            WHERE status IN ('applied', 'interviewing')
+        """).fetchone()[0]
+        rejected = conn.execute("""
+            SELECT COUNT(*) FROM jobs
+            WHERE status IN ('rejected', 'rejected_after_interview')
+        """).fetchone()[0]
         return {
-            "total":        total,
-            "applied":      applied,
-            "interviewing": interviewing,
-            "avg_score":    int(avg_score or 0),
+            "applied":     applied,
+            "in_progress": in_progress,
+            "rejected":    rejected,
         }
 
 def get_stats_detail():
     """Richer stats for the /stats page."""
     with get_connection() as conn:
         # Funnel counts
-        funnel = {}
-        for status in ("applied", "interviewing", "offer", "rejected", "rejected_after_interview"):
-            funnel[status] = conn.execute(
-                "SELECT COUNT(*) FROM jobs WHERE status = ?", (status,)
-            ).fetchone()[0]
+        applied_total = conn.execute("""
+            SELECT COUNT(*) FROM jobs
+            WHERE status NOT IN ('new', 'ignored', 'ghosted', 'hidden')
+            AND hidden = 0
+        """).fetchone()[0]
 
-        # Applications per day (last 60 days)
+        in_progress = conn.execute("""
+            SELECT COUNT(*) FROM jobs WHERE status IN ('applied', 'interviewing')
+        """).fetchone()[0]
+
+        interviewing = conn.execute(
+            "SELECT COUNT(*) FROM jobs WHERE status = 'interviewing'"
+        ).fetchone()[0]
+
+        offer = conn.execute(
+            "SELECT COUNT(*) FROM jobs WHERE status = 'offer'"
+        ).fetchone()[0]
+
+        rejected = conn.execute("""
+            SELECT COUNT(*) FROM jobs
+            WHERE status IN ('rejected', 'rejected_after_interview')
+        """).fetchone()[0]
+
+        funnel = {
+            "applied":      applied_total,
+            "in_progress":  in_progress,
+            "interviewing": interviewing,
+            "offer":        offer,
+            "rejected":     rejected,
+        }
+
+        # Applications per day
         apps_by_day = conn.execute("""
             SELECT applied_date, COUNT(*) as count
             FROM jobs
@@ -181,29 +214,45 @@ def get_stats_detail():
             ORDER BY applied_date
         """).fetchall()
 
-        # Ghosted = applied 7+ days ago, status still 'applied'
+        # Ghosted
         ghosted = conn.execute("""
-            SELECT COUNT(*) FROM jobs
-            WHERE status = 'ghosted'
+            SELECT COUNT(*) FROM jobs WHERE status = 'ghosted'
         """).fetchone()[0]
 
-        # Referral breakdown (among applied+)
+        # Referral breakdown
         referral_yes = conn.execute("""
             SELECT COUNT(*) FROM jobs
-            WHERE status IN ('applied','interviewing','rejected')
-            AND referral = 1
+            WHERE status NOT IN ('new', 'ignored', 'ghosted', 'hidden')
+            AND hidden = 0 AND referral = 1
         """).fetchone()[0]
 
         referral_no = conn.execute("""
             SELECT COUNT(*) FROM jobs
-            WHERE status IN ('applied','interviewing','rejected')
-            AND referral = 0
+            WHERE status NOT IN ('new', 'ignored', 'ghosted', 'hidden')
+            AND hidden = 0 AND referral = 0
         """).fetchone()[0]
 
         return {
-            "funnel": funnel,
+            "funnel":      funnel,
             "apps_by_day": [dict(r) for r in apps_by_day],
-            "ghosted": ghosted,
+            "ghosted":     ghosted,
             "referral_yes": referral_yes,
-            "referral_no": referral_no,
+            "referral_no":  referral_no,
         }
+
+def add_job_manually(title, company, city, job_url, date_applied, date_posted=None):
+    with get_connection() as conn:
+        conn.execute("""
+            INSERT INTO jobs
+                (title, company, location, city, score, job_url,
+                 date_posted, date_found, status, applied_date)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'applied', ?)
+        """, (
+            title, company, city, city,
+            0,
+            job_url or None,
+            date_posted or None,
+            datetime.date.today().isoformat(),
+            date_applied or None,
+        ))
+

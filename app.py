@@ -46,7 +46,7 @@ def clear_unreviewed():
 
 @app.route("/update_referral/<int:job_id>", methods=["POST"])
 def update_referral(job_id):
-    referral = 1 if request.form.get("referral") else 0
+    referral = int(request.form.get("referral", 0))
     update_job(job_id, referral=referral)
     return {"referral": referral}
 
@@ -54,6 +54,18 @@ def update_referral(job_id):
 def stats_page():
     data = get_stats_detail()
     return render_template("stats.html", data=data)
+
+@app.route("/add_job", methods=["POST"])
+def add_job():
+    from storage import add_job_manually
+    add_job_manually(
+        title        = request.form.get("title"),
+        company      = request.form.get("company"),
+        city         = request.form.get("city"),
+        job_url      = request.form.get("job_url"),
+        date_applied = request.form.get("date_applied"),
+    )
+    return redirect(url_for("index"))
 
 if __name__ == "__main__":
     init_db()

@@ -38,10 +38,9 @@
     <h1>Job Tracker &nbsp;<a href="/stats" style="font-size: 0.5em; font-weight: normal; color: #0066cc;">Stats →</a></h1>
 
     <div class="stats">
-        <div class="stat-box">Total<span>{{ stats.total }}</span></div>
         <div class="stat-box">Applied<span>{{ stats.applied }}</span></div>
-        <div class="stat-box">Interviewing<span>{{ stats.interviewing }}</span></div>
-        <div class="stat-box">Avg Score<span>{{ stats.avg_score }}</span></div>
+        <div class="stat-box">In progress<span>{{ stats.in_progress }}</span></div>
+        <div class="stat-box">Rejected<span>{{ stats.rejected }}</span></div>
     </div>
 
     <div class="filters">
@@ -62,6 +61,21 @@
             <button class="btn-clear">Clear unreviewed</button>
         </form>
     </div>
+
+    <details style="margin-bottom: 16px;">
+        <summary style="cursor: pointer; font-weight: bold; color: #0066cc;">+ Add job manually</summary>
+        <form method="post" action="/add_job" style="margin-top: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 700px;">
+            <input name="title"    placeholder="Job title *" required style="padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px;">
+            <input name="company"  placeholder="Company *"   required style="padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px;">
+            <input name="city"     placeholder="City"                 style="padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px;">
+            <input name="job_url"  placeholder="Job URL"              style="padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px;">
+            <label style="font-size: 0.85em; color: #555; align-self: center;">
+                Date applied
+                <input name="date_applied" type="date" style="display: block; padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; margin-top: 2px;">
+            </label>
+            <button type="submit" style="background: #333; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; align-self: end;">Save job</button>
+        </form>
+    </details>
 
     <table>
         <tr>
