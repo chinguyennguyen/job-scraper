@@ -1,6 +1,8 @@
 # Personal data — never publish these
 jobs.db
 config.yaml
+seed_demo.py
+jobs_demo.db
 
 # Python cache
 __pycache__/
