@@ -1,8 +1,8 @@
 # Job Scraper & Tracker
 
-A personal job search tool that scrapes listings from LinkedIn and Indeed, scores them by relevance, and lets you track your applications through a local web interface.
-
-Built with Python, Flask, and SQLite.
+A personal job search tool that scrapes listings from LinkedIn and Indeed, scores them by relevance, and lets you track your applications through a browser interface.
+Built by an economist, not a software engineer. It's designed to be as simple and intuitive as possible, because life is already hard enough for job seekers.
+No Python, no dependencies, no complicated setup. If you can read, you can get this running in under 15 minutes (excluding scraping time).
 
 ![Status](https://img.shields.io/badge/status-active-brightgreen)
 
@@ -30,85 +30,73 @@ Built with Python, Flask, and SQLite.
 
 ## Setup
 
-### Option A — Docker (recommended)
-
-The easiest way to run the app. No Python installation needed.
+You only need two things installed: **Docker Desktop** and *nothing else*. No Python required.
 
 **1. Install Docker Desktop**
-Download from [docker.com](https://www.docker.com/products/docker-desktop/) and install it.
 
-**2. Download the Sankey chart library**
+Download from [docker.com](https://www.docker.com/products/docker-desktop/) and install it. Once installed, open it and wait until it shows **"Engine running"** in the bottom left. You can leave it running in the background — you won't need to click anything inside it.
 
-The stats page uses a chart library that isn't included in this repo. Download it manually:
+**2. Download this project**
 
-- Go to: https://cdn.jsdelivr.net/npm/chartjs-chart-sankey/dist/chartjs-chart-sankey.min.js
-- Save the file as `chartjs-chart-sankey.min.js` inside the `static/` folder
+Go to the top of this GitHub page, click the green **Code** button, and select **Download ZIP**. Once downloaded, find the ZIP file (probably in your Downloads folder), right-click it, and select **Extract All**. Put the extracted folder somewhere easy to find, like your Desktop.
 
-**3. Create your config file**
+**3. Open a command window inside the folder**
+
+Open the extracted folder. Click the address bar at the top of the window so it highlights, type `cmd`, and press Enter. A black window will appear — this is where you'll type all the commands below.
+
+**4. Create your config file**
+
+In the black window, run:
+
 ```
 copy config.example.yaml config.yaml
 ```
-Then open `config.yaml` and fill in your search terms, cities, and preferences.
 
-**4. Build the container**
+Then open `config.yaml` in Notepad (right-click the file → Open with → Notepad) and fill in your own search terms and cities. This is the only file you'll ever need to edit. Save and close when done.
+
+**5. Build the app**
+
+In the black window, run:
+
 ```
 docker compose build
 ```
 
-**5. Run the scraper**
+This sets everything up inside Docker. It takes a few minutes the first time — you'll see a lot of output. Wait until it finishes and you see your prompt again.
+
+**6. Run the scraper**
+
 ```
 docker compose run --rm scraper
 ```
 
-**6. Open the web app**
+This fetches job listings and saves them to a local database. You should see job counts printed for each city. This means it worked.
+
+**7. Open the web app**
+
 ```
 docker compose up app
 ```
-Then open your browser at `http://localhost:5000`
 
----
+Then open your browser and go to **http://localhost:5000**
 
-### Option B — Plain Python
+You should see your job tracker with the scraped jobs.
 
-If you prefer to run without Docker.
-
-**1. Install Python 3.11+** from [python.org](https://www.python.org)
-
-**2. Install dependencies**
-```
-pip install -r requirements.txt
-```
-
-**3. Download the Sankey chart library**
-
-Same as step 2 in Option A above.
-
-**4. Create your config file**
-```
-copy config.example.yaml config.yaml
-```
-
-**5. Run the scraper**
-```
-python main.py
-```
-
-**6. Open the web app**
-```
-python app.py
-```
-Then open your browser at `http://localhost:5000`
+To stop the app, go back to the black window and press **Ctrl+C**.
 
 ---
 
 ## Daily workflow
 
-1. Run the scraper (`docker compose run --rm scraper` or `python main.py`)
-2. Open the web app (`docker compose up app` or `python app.py`)
-3. Review new jobs in the browser
-4. Set status on interesting ones using the dropdown
-5. Tick the referral checkbox if you applied via a referral
-6. Hit **Clear unreviewed** to dismiss the rest
+1. Open Docker Desktop and make sure it's running
+2. Open the black window in your project folder (same as Setup step 3)
+3. Run the scraper: `docker compose run --rm scraper`
+4. Start the web app: `docker compose up app`
+5. Go to **http://localhost:5000** in your browser
+6. Review new jobs, set a status on ones you're interested in
+7. Tick the referral checkbox if you applied via a referral
+8. Hit **Clear unreviewed** to dismiss the rest
+9. Press **Ctrl+C** in the black window to stop the app when done
 
 Applied and interviewing jobs stay pinned at the top across sessions.
 
@@ -116,7 +104,7 @@ Applied and interviewing jobs stay pinned at the top across sessions.
 
 ## Configuration
 
-Everything is controlled from `config.yaml`. No Python knowledge needed.
+Everything is controlled from `config.yaml`. Open it in any text editor to make changes.
 
 | Section | What it does |
 |---|---|
@@ -146,32 +134,7 @@ Everything is controlled from `config.yaml`. No Python knowledge needed.
 | `rejected_after_interview` | Rejected after reaching interview stage |
 | `ghosted` | Applied 7+ days ago with no response (auto-assigned) |
 
-Statuses are set via dropdown in the UI. `age_unreviewed()` runs automatically on each scrape and handles the `ignored`, `ghosted`, and `hidden` transitions.
-
----
-
-## Project structure
-
-```
-job_scraper/
-├── templates/
-│   ├── index.html          ← main jobs UI
-│   └── stats.html          ← stats page
-├── static/
-│   └── chartjs-chart-sankey.min.js  ← download manually (see setup)
-├── config.yaml             ← your personal config (not in repo)
-├── config.example.yaml     ← template — copy this to config.yaml
-├── config.py               ← loads config.yaml
-├── filter.py               ← scoring and filtering logic
-├── scraper.py              ← scrapes jobs via jobspy
-├── storage.py              ← all database reads and writes
-├── main.py                 ← entry point for scraping
-├── app.py                  ← Flask web app
-├── requirements.txt        ← Python dependencies
-├── Dockerfile              ← container definition
-├── docker-compose.yml      ← runs scraper and web app as services
-└── jobs.db                 ← your database (not in repo, created on first run)
-```
+Statuses are set via the dropdown in the UI. The app automatically moves stale jobs through the lifecycle each time you run the scraper.
 
 ---
 
@@ -181,10 +144,15 @@ job_scraper/
 - **jobspy** — LinkedIn and Indeed scraping
 - **SQLite** — local database, no server needed
 - **Flask** — lightweight web framework for the UI
-- **Chart.js + chartjs-chart-sankey** — stats page visualisations
+- **Docker** — runs everything without needing Python installed
+- **Chart.js** — stats page visualisations
 
 ---
 
 ## License
 
 MIT
+
+## Contact
+
+Chi Nguyen, chi.nguyen@economics.gu.se 
