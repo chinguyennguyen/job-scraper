@@ -22,9 +22,11 @@ No Python, no dependencies, no complicated setup. If you can read, you can get t
 ## Screenshots
 
 *Main job tracker*
+
 ![Job Tracker](screenshots/tracker.png)
 
 *Stats page*
+
 ![Stats](screenshots/stats.png)
 
 ---
