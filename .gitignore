@@ -1,4 +1,4 @@
-# Personal data — never publish these
+# Personal data 
 jobs.db
 config.yaml
 seed_demo.py
@@ -8,8 +8,6 @@ jobs_demo.db
 __pycache__/
 *.pyc
 
-# Environment variables (in case you add secrets later)
+# Environment variables 
 .env
 
-# Third-party JS library — users download this themselves
-static/chartjs-chart-sankey.min.js
