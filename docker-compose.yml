@@ -1,0 +1,13 @@
+services:
+  app:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+
+  scraper:
+    build: .
+    command: python main.py
+    volumes:
+      - .:/app

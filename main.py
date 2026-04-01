@@ -27,12 +27,9 @@ def main():
     save_jobs(df_all)
 
     stats = get_stats()
-    print(f"\n{'='*60}")
-    print(f"Done.")
-    print(f"Total in database : {stats['total']}")
     print(f"Applied           : {stats['applied']}")
-    print(f"Interviewing      : {stats['interviewing']}")
-    print(f"{'='*60}")
+    print(f"In progress       : {stats['in_progress']}")
+    print(f"Rejected          : {stats['rejected']}")
 
 
 if __name__ == "__main__":
