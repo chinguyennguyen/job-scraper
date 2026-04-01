@@ -2,6 +2,7 @@
 
 A personal job search tool that scrapes listings from LinkedIn and Indeed, scores them by relevance, and lets you track your applications through a browser interface.
 Built by an economist with zero programming experience. It's designed to be as simple and intuitive as possible, because life is already hard enough for job seekers.
+
 No Python, no dependencies, no complicated setup. If you can read, you can get this running in under 15 minutes (excluding scraping time).
 
 ![Status](https://img.shields.io/badge/status-active-brightgreen)
