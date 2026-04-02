@@ -153,7 +153,7 @@ def get_stats():
     with get_connection() as conn:
         applied = conn.execute("""
             SELECT COUNT(*) FROM jobs
-            WHERE status NOT IN ('new', 'ignored', 'ghosted', 'hidden')
+            WHERE status NOT IN ('new', 'ignored', 'hidden')
             AND hidden = 0
         """).fetchone()[0]
         in_progress = conn.execute("""
@@ -176,7 +176,7 @@ def get_stats_detail():
         # Funnel counts
         applied_total = conn.execute("""
             SELECT COUNT(*) FROM jobs
-            WHERE status NOT IN ('new', 'ignored', 'ghosted', 'hidden')
+            WHERE status NOT IN ('new', 'ignored', 'hidden')
             AND hidden = 0
         """).fetchone()[0]
 
