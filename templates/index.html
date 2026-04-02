@@ -104,6 +104,7 @@
                     <option value="offer"                    {% if job.status == 'offer' %}selected{% endif %}>offer</option>
                     <option value="rejected"                 {% if job.status == 'rejected' %}selected{% endif %}>rejected</option>
                     <option value="rejected_after_interview" {% if job.status == 'rejected_after_interview' %}selected{% endif %}>rejected (after interview)</option>
+                    <option value="ghosted"                  {% if job.status == 'ghosted' %}selected{% endif %}>ghosted</option>
                 </select>
             </td>
             <td>
