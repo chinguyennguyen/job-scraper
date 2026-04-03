@@ -11,8 +11,8 @@ No Python, no dependencies, no complicated setup. If you can read, you can get t
 
 ## What it does
 
-- Scrapes job listings across multiple cities and search terms
-- Filters out irrelevant jobs (wrong language, wrong seniority, blocked companies)
+- Scrapes job listings across multiple cities and search terms (default setting: listing within 72 hours)
+- Filters out irrelevant jobs (language, seniority, blocked companies)
 - Scores remaining jobs by keyword relevance and company priority
 - Surfaces the top-scored jobs each week with a weekly application goal
 - Tracks application status through a browser UI at `localhost:5000`
@@ -169,7 +169,8 @@ Everything is controlled from `config.yaml`. Open it in any text editor to make 
 | `ghosted` | Applied 7+ days ago with no response (auto-assigned) |
 | `untrack` | Removed from tracker — recent jobs return to new, older ones are hidden |
 
-Statuses are updated via the dropdown in the Tracker. The scraper automatically ghosts stale applications and hides old unreviewed jobs on each run.
+Statusese are updated via a dropdown menu in the Tracker. The scraper automatically ghosts stale applications and hide old unapplied jobs (more than a week old on each run)
+
 ---
 
 ## Tech stack
@@ -178,7 +179,7 @@ Statuses are updated via the dropdown in the Tracker. The scraper automatically 
 - **jobspy** — LinkedIn and Indeed scraping
 - **SQLite** — local database, no server needed
 - **Flask** — lightweight web framework for the UI
-- **Docker** — runs everything without needing Python installed
+- **Docker** — runs everything without needing Python installed 
 - **Chart.js** — stats page visualisations
 
 ---
