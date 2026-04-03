@@ -1,7 +1,7 @@
 # Job Scraper & Tracker
 
 A personal job search tool that scrapes listings from LinkedIn and Indeed, scores them by relevance, and lets you track your applications through a browser interface.
-Built by an economist with zero programming experience. It's designed to be as simple and intuitive as possible, because life is already hard enough for job seekers.
+Built by an economist with zero programming experience. It's designed to be as simple and intuitive as possible, because life is already hard enough for us job seekers.
 
 No Python, no dependencies, no complicated setup. If you can read, you can get this running in under 15 minutes (excluding scraping time).
 
@@ -14,6 +14,7 @@ No Python, no dependencies, no complicated setup. If you can read, you can get t
 - Scrapes job listings across multiple cities and search terms
 - Filters out irrelevant jobs (wrong language, wrong seniority, blocked companies)
 - Scores remaining jobs by keyword relevance and company priority
+- Surfaces the top-scored jobs each week with a weekly application goal
 - Tracks application status through a browser UI at `localhost:5000`
 - Ages and hides stale jobs automatically on each run
 
@@ -21,19 +22,44 @@ No Python, no dependencies, no complicated setup. If you can read, you can get t
 
 ## Screenshots
 
-*Main job tracker*
+*Weekly Picks — top scored jobs with application goal tracker*
 
-![Job Tracker](screenshots/tracker.png)
+![Weekly Picks](screenshots/scraper.png)
 
-*Stats page*
+*Tracker — full application pipeline*
+
+![Tracker](screenshots/tracker.png)
+
+*Stats — application flow, referral breakdown, timeline*
 
 ![Stats](screenshots/stats.png)
 
 ---
 
+## Project structure
+```
+job_scraper/
+├── templates/
+│   ├── index.html           ← Weekly Picks page
+│   ├── tracker.html         ← Tracker page
+│   └── stats.html           ← Stats page
+├── static/
+│   └── chartjs-chart-sankey.min.js
+├── config.example.yaml      ← copy this to config.yaml and edit it
+├── config.py                ← loads config.yaml
+├── filter.py                ← scoring and filtering logic
+├── scraper.py               ← scrapes LinkedIn and Indeed
+├── storage.py               ← all database reads and writes
+├── main.py                  ← run this daily to scrape
+├── app.py                   ← Flask web app
+├── requirements.txt
+├── Dockerfile
+└── docker-compose.yml
+```
+
 ## Setup
 
-You only need two things installed: **Docker Desktop** and *nothing else*. No Python required.
+You only need one thing installed: **Docker Desktop**. No Python required.
 
 **1. Install Docker Desktop**
 
@@ -55,17 +81,15 @@ In the black window, run:
 copy config.example.yaml config.yaml
 ```
 
-Then open `config.yaml` in Notepad (right-click the file → Open with → Notepad) and fill in your own search terms and cities. This is the only file you'll ever need to edit. Save and close when done.
+Then open `config.yaml` in Notepad (right-click → Open with → Notepad) and fill in your own search terms and cities. This is the only file you'll ever need to edit. Save and close when done.
 
 **5. Build the app**
-
-In the black window, run:
 
 ```
 docker compose build
 ```
 
-This sets everything up inside Docker. It takes a few minutes the first time — you'll see a lot of output. Wait until it finishes and you see your prompt again.
+This sets everything up inside Docker. It takes a few minutes the first time. Wait until it finishes and you see your prompt again.
 
 **6. Run the scraper**
 
@@ -73,7 +97,7 @@ This sets everything up inside Docker. It takes a few minutes the first time —
 docker compose run --rm scraper
 ```
 
-This fetches job listings and saves them to a local database. You should see job counts printed for each city. This means it worked.
+This fetches job listings and saves them to a local database. You'll see job counts printed for each city.
 
 **7. Open the web app**
 
@@ -83,9 +107,7 @@ docker compose up app
 
 Then open your browser and go to **http://localhost:5000**
 
-You should see your job tracker with the scraped jobs.
-
-To stop the app, go back to the black window and press **Ctrl+C**.
+You'll land on the Weekly Picks page with your scored jobs. To stop the app, press **Ctrl+C** in the black window.
 
 ---
 
@@ -96,12 +118,21 @@ To stop the app, go back to the black window and press **Ctrl+C**.
 3. Run the scraper: `docker compose run --rm scraper`
 4. Start the web app: `docker compose up app`
 5. Go to **http://localhost:5000** in your browser
-6. Review new jobs, set a status on ones you're interested in
-7. Tick the referral checkbox if you applied via a referral
-8. Hit **Clear unreviewed** to dismiss the rest
-9. Press **Ctrl+C** in the black window to stop the app when done
+6. On **Weekly Picks**: review the top-scored jobs and click **Apply** on the ones you applied to
+7. Tick the referral checkbox on the **Tracker** page if you applied via a referral
+8. Press **Ctrl+C** in the black window to stop the app when done
 
-Applied and interviewing jobs stay pinned at the top across sessions.
+Jobs you've applied to, are interviewing at, or have offers from stay pinned at the top of the Tracker across sessions.
+
+---
+
+## The three pages
+
+**Weekly Picks** (`/`) — shows the highest-scored new jobs from the past 7 days, split into your top-N recommendations and the rest. Includes a weekly application goal with a progress bar. Hit **Apply** to log an application directly from this page.
+
+**Tracker** (`/tracker`) — your full application history. Shows every job you've applied to with its current status, applied date, and referral flag. Use the status dropdown to move jobs through the pipeline. Summary stat boxes at the top show your pipeline at a glance.
+
+**Stats** (`/stats`) — visualises your job search funnel. The Sankey diagram splits applications by source (direct vs referral) and shows how each group progresses through interviewing, offers, and rejections. Includes an applications-over-time bar chart.
 
 ---
 
@@ -113,14 +144,15 @@ Everything is controlled from `config.yaml`. Open it in any text editor to make 
 |---|---|
 | `search_terms` | Job titles to search for |
 | `cities` | Locations to search, with language filter settings |
-| `hours_old` | How recent the listings need to be |
+| `hours_old` | How recent the listings need to be (default: 72 hours) |
 | `scoring.base_keywords` | Job must match at least one to appear at all |
 | `scoring.priority_keywords` | Each match adds +1 to the score |
-| `scoring.priority_companies` | Matched companies get +2 bonus points |
-| `scoring.negative_title_keywords` | Hard exclusion by title |
+| `scoring.referral_companies` | Companies where you have a contact — +3 bonus points |
+| `scoring.priority_companies` | Strong target companies — +1 bonus point |
+| `scoring.negative_title_keywords` | Hard exclusion by title keyword |
 | `scoring.blocked_companies` | Hard exclusion by company name |
-| `scoring.senior_title_keywords` | Score penalty of -3 (not excluded) |
-| `language_filters` | Words and phrases that identify German or Swedish postings |
+| `scoring.senior_title_keywords` | Score penalty of -3, not a hard exclusion |
+| `language_filters` | Words and phrases that identify postings in languages you don't want |
 
 ---
 
@@ -128,17 +160,16 @@ Everything is controlled from `config.yaml`. Open it in any text editor to make 
 
 | Status | Meaning |
 |---|---|
-| `new` | Scraped today, not yet reviewed |
-| `ignored` | Carried over from a previous day |
+| `new` | Scraped recently, not yet reviewed |
 | `applied` | You applied — date recorded automatically |
 | `interviewing` | Progressed to interview stage |
 | `offer` | Received an offer |
 | `rejected` | Rejected or withdrawn after applying |
 | `rejected_after_interview` | Rejected after reaching interview stage |
 | `ghosted` | Applied 7+ days ago with no response (auto-assigned) |
+| `untrack` | Removed from tracker — recent jobs return to new, older ones are hidden |
 
-Statuses are set via the dropdown in the UI. The app automatically moves stale jobs through the lifecycle each time you run the scraper.
-
+Statuses are updated via the dropdown in the Tracker. The scraper automatically ghosts stale applications and hides old unreviewed jobs on each run.
 ---
 
 ## Tech stack
@@ -158,4 +189,4 @@ MIT
 
 ## Contact
 
-Chi Nguyen, chi.nguyen@economics.gu.se 
+Chi Nguyen · chi.nguyen@economics.gu.se

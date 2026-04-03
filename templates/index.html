@@ -1,160 +1,271 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Job Tracker</title>
+    <title>Weekly Picks</title>
     <style>
         body { font-family: sans-serif; max-width: 1300px; margin: 40px auto; padding: 0 20px; }
-        .stats { display: flex; gap: 20px; margin-bottom: 20px; }
-        .stat-box { background: #f0f0f0; padding: 12px 20px; border-radius: 6px; }
-        .stat-box span { font-size: 1.4em; font-weight: bold; display: block; }
-        table { width: 100%; border-collapse: collapse; }
-        th { background: #333; color: white; padding: 10px; text-align: left; }
-        td { padding: 8px 10px; border-bottom: 1px solid #ddd; vertical-align: middle; }
-        tr:hover { background: #f9f9f9; }
-        a { color: #0066cc; }
-        .score { font-weight: bold; }
-        .status-select {
-            border: none; padding: 4px 8px; border-radius: 4px;
-            font-size: 0.85em; font-weight: bold; cursor: pointer;
+
+        /* NAV */
+        nav { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; }
+        nav a { color: #0066cc; text-decoration: none; font-size: 0.95em; }
+        nav a:hover { text-decoration: underline; }
+        nav .active { font-weight: bold; color: #333; pointer-events: none; }
+
+        /* GOAL BAR */
+        .goal-bar {
+            display: flex; align-items: center; gap: 16px;
+            background: #f8f8f8; border: 1px solid #e0e0e0;
+            border-radius: 8px; padding: 16px 20px; margin-bottom: 28px;
         }
-        .status-select.status-new                      { background: #e0e0e0; color: #555; }
-        .status-select.status-applied                  { background: #cce0ff; color: #0044aa; }
-        .status-select.status-interviewing             { background: #ccf0d4; color: #116622; }
-        .status-select.status-offer                    { background: #fef08a; color: #713f12; }
-        .status-select.status-rejected                 { background: #ffd0d0; color: #aa0000; }
-        .status-select.status-rejected_after_interview { background: #ffd0d0; color: #aa0000; }
-        .status-select.status-ignored                  { background: #f5f0e0; color: #888; }
-        .status-select.status-ghosted                  { background: #e2e8f0; color: #64748b; }
-        .btn-clear {
+        .goal-label { font-size: 0.9em; color: #555; white-space: nowrap; }
+        .goal-progress { font-size: 1.5em; font-weight: bold; color: #333; }
+        .goal-progress span { color: #0066cc; }
+        .progress-bar-wrap {
+            flex: 1; background: #e0e0e0; border-radius: 999px; height: 10px;
+        }
+        .progress-bar-fill {
+            background: #4ade80; height: 10px; border-radius: 999px;
+            transition: width 0.3s ease;
+        }
+        .goal-form { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+        .goal-form input {
+            width: 56px; padding: 5px 8px; border: 1px solid #ccc;
+            border-radius: 4px; font-size: 0.9em; text-align: center;
+        }
+        .goal-form button {
             background: #333; color: white; border: none;
-            padding: 8px 16px; border-radius: 4px; cursor: pointer;
-            margin-bottom: 16px; margin-left: 10px;
+            padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85em;
         }
-        .btn-clear:hover { background: #555; }
-        .filters { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+        .goal-form button:hover { background: #555; }
+
+        /* SECTION HEADERS */
+        .section-header {
+            font-size: 1em; font-weight: bold; color: #333;
+            margin: 0 0 10px 0; padding-bottom: 6px;
+            border-bottom: 2px solid #333;
+        }
+        .section-divider {
+            border: none; border-top: 1px solid #ddd; margin: 28px 0;
+        }
+
+        /* SORT/FILTER BAR */
+        .filter-bar {
+            display: flex; align-items: center; gap: 12px; margin-bottom: 12px;
+        }
+        .filter-bar label { font-size: 0.85em; color: #555; }
+        .filter-bar select {
+            padding: 4px 8px; border: 1px solid #ccc; border-radius: 4px;
+            font-size: 0.85em;
+        }
+
+        /* TABLE */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+        th { background: #333; color: white; padding: 10px; text-align: left; font-size: 0.85em; }
+        td { padding: 8px 10px; border-bottom: 1px solid #eee; vertical-align: middle; font-size: 0.9em; }
+        tr:hover { background: #fafafa; }
+        a { color: #0066cc; }
+        .score { font-weight: bold; color: #333; }
+
+        /* APPLY BUTTON */
+        .btn-apply {
+            background: #e0e0e0; color: #555; border: none;
+            padding: 5px 14px; border-radius: 4px; cursor: pointer;
+            font-size: 0.8em; font-weight: bold; transition: background 0.15s, color 0.15s;
+            white-space: nowrap;
+        }
+        .btn-apply.applied {
+            background: #4ade80; color: #166534;
+        }
+        .btn-apply:hover { opacity: 0.85; }
+
+        .no-jobs { color: #999; font-size: 0.9em; padding: 20px 0; }
     </style>
 </head>
 <body>
-    <h1>Job Tracker &nbsp;<a href="/stats" style="font-size: 0.5em; font-weight: normal; color: #0066cc;">Stats →</a></h1>
 
-    <div class="stats">
-        <div class="stat-box">Applied<span>{{ stats.applied }}</span></div>
-        <div class="stat-box">In progress<span>{{ stats.in_progress }}</span></div>
-        <div class="stat-box">Rejected<span>{{ stats.rejected }}</span></div>
-    </div>
+    <nav>
+        <span class="active">Weekly Picks</span>
+        <a href="/tracker">Tracker</a>
+        <a href="/stats">Stats</a>
+    </nav>
 
-    <div class="filters">
-        <form method="get">
-            <select name="status" onchange="this.form.submit()">
-                <option value="">All jobs</option>
-                <option value="new"                      {% if status_filter == 'new' %}selected{% endif %}>New</option>
-                <option value="applied"                  {% if status_filter == 'applied' %}selected{% endif %}>Applied</option>
-                <option value="interviewing"             {% if status_filter == 'interviewing' %}selected{% endif %}>Interviewing</option>
-                <option value="offer"                    {% if status_filter == 'offer' %}selected{% endif %}>Offer</option>
-                <option value="rejected"                 {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
-                <option value="rejected_after_interview" {% if status_filter == 'rejected_after_interview' %}selected{% endif %}>Rejected (after interview)</option>
-                <option value="ghosted"                  {% if status_filter == 'ghosted' %}selected{% endif %}>Ghosted</option>
-            </select>
-        </form>
-        <form method="post" action="/clear_unreviewed"
-              onsubmit="return confirm('Hide all unreviewed jobs?')">
-            <button class="btn-clear">Clear unreviewed</button>
+    <!-- GOAL BAR -->
+    <div class="goal-bar">
+        <div>
+            <div class="goal-label">This week's goal</div>
+            <div class="goal-progress"><span id="applied-count">{{ applied }}</span> / {{ goal }} applied</div>
+        </div>
+        <div class="progress-bar-wrap">
+            <div class="progress-bar-fill" id="progress-fill"
+                 style="width: {{ [[(applied / goal * 100) if goal > 0 else 0, 0]|max, 100]|min }}%">
+            </div>
+        </div>
+        <form class="goal-form" method="post" action="/set_goal">
+            <label style="font-size:0.85em; color:#555;">Goal</label>
+            <input name="goal" type="number" min="1" max="100" value="{{ goal }}">
+            <button type="submit">Set</button>
         </form>
     </div>
 
-    <details style="margin-bottom: 16px;">
-        <summary style="cursor: pointer; font-weight: bold; color: #0066cc;">+ Add job manually</summary>
-        <form method="post" action="/add_job" style="margin-top: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 700px;">
-            <input name="title"    placeholder="Job title *" required style="padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px;">
-            <input name="company"  placeholder="Company *"   required style="padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px;">
-            <input name="city"     placeholder="City"                 style="padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px;">
-            <input name="job_url"  placeholder="Job URL"              style="padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px;">
-            <label style="font-size: 0.85em; color: #555; align-self: center;">
-                Date applied
-                <input name="date_applied" type="date" style="display: block; padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; margin-top: 2px;">
-            </label>
-            <button type="submit" style="background: #333; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; align-self: end;">Save job</button>
-        </form>
-    </details>
-
-    <table>
+    <!-- RECOMMENDED -->
+    <div class="section-header">Recommended — Top {{ goal }}</div>
+    {% if recommended %}
+    <table id="recommended-table">
         <tr>
             <th>Score</th>
             <th>Title</th>
             <th>Company</th>
             <th>City</th>
             <th>Posted</th>
-            <th>Applied</th>
-            <th>Status</th>
-            <th>Referral</th>
+            <th>Found</th>
+            <th></th>
         </tr>
-        {% for job in jobs %}
-        <tr>
+        {% for job in recommended %}
+        <tr data-job-id="{{ job.id }}">
             <td class="score">{{ job.score }}</td>
             <td><a href="{{ job.job_url }}" target="_blank">{{ job.title }}</a></td>
             <td>{{ job.company }}</td>
             <td>{{ job.city }}</td>
             <td>{{ job.date_posted }}</td>
-            <td class="applied-date">{{ job.applied_date or '' }}</td>
+            <td>{{ job.date_found }}</td>
             <td>
-                <select class="status-select status-{{ job.status }}" data-job-id="{{ job.id }}">
-                    <option value="new"                      {% if job.status == 'new' %}selected{% endif %}>new</option>
-                    <option value="applied"                  {% if job.status == 'applied' %}selected{% endif %}>applied</option>
-                    <option value="interviewing"             {% if job.status == 'interviewing' %}selected{% endif %}>interviewing</option>
-                    <option value="offer"                    {% if job.status == 'offer' %}selected{% endif %}>offer</option>
-                    <option value="rejected"                 {% if job.status == 'rejected' %}selected{% endif %}>rejected</option>
-                    <option value="rejected_after_interview" {% if job.status == 'rejected_after_interview' %}selected{% endif %}>rejected (after interview)</option>
-                    <option value="ghosted"                  {% if job.status == 'ghosted' %}selected{% endif %}>ghosted</option>
-                </select>
-            </td>
-            <td>
-                <input type="checkbox" class="referral-check"
-                       data-job-id="{{ job.id }}"
-                       {% if job.referral %}checked{% endif %}>
+                <button class="btn-apply {% if job.status == 'applied' %}applied{% endif %}"
+                        data-job-id="{{ job.id }}"
+                        data-applied="{{ 'true' if job.status == 'applied' else 'false' }}">
+                    {% if job.status == 'applied' %}Applied{% else %}Apply{% endif %}
+                </button>
             </td>
         </tr>
         {% endfor %}
     </table>
+    {% else %}
+    <p class="no-jobs">No recommended jobs yet — run the scraper to fetch new listings.</p>
+    {% endif %}
 
-    <script>
-        // Status dropdown
-        document.querySelectorAll(".status-select").forEach(select => {
-            select.addEventListener("change", function() {
-                const jobId = this.dataset.jobId;
-                const newStatus = this.value;
+    <hr class="section-divider">
 
-                fetch(`/update_status/${jobId}`, {
-                    method: "POST",
-                    headers: {"Content-Type": "application/x-www-form-urlencoded"},
-                    body: `current_status=${newStatus}&force_status=${newStatus}`
-                })
-                .then(r => r.json())
-                .then(data => {
-                    this.className = `status-select status-${data.status}`;
-                    const row = this.closest("tr");
-                    const appliedCell = row.querySelector(".applied-date");
-                    if (appliedCell) {
-                        if (data.status === "new") {
-                            appliedCell.textContent = '';
-                        } else if (data.applied_date) {
-                            appliedCell.textContent = data.applied_date;
-                        }
-                    }
-                });
+    <!-- OTHER LISTINGS -->
+    <div class="section-header">Other listings</div>
+
+    <div class="filter-bar">
+        <label>Sort by</label>
+        <select id="sort-select">
+            <option value="score">Score</option>
+            <option value="date_found">Date found</option>
+            <option value="date_posted">Date posted</option>
+        </select>
+        <label style="margin-left:12px;">City</label>
+        <select id="city-filter">
+            <option value="">All cities</option>
+            {% set cities = others | map(attribute='city') | unique | list %}
+            {% for city in cities %}
+            <option value="{{ city }}">{{ city }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    {% if others %}
+    <table id="others-table">
+        <tr>
+            <th>Score</th>
+            <th>Title</th>
+            <th>Company</th>
+            <th>City</th>
+            <th>Posted</th>
+            <th>Found</th>
+            <th></th>
+        </tr>
+        {% for job in others %}
+        <tr data-job-id="{{ job.id }}"
+            data-score="{{ job.score }}"
+            data-date_found="{{ job.date_found }}"
+            data-date_posted="{{ job.date_posted or '' }}"
+            data-city="{{ job.city }}">
+            <td class="score">{{ job.score }}</td>
+            <td><a href="{{ job.job_url }}" target="_blank">{{ job.title }}</a></td>
+            <td>{{ job.company }}</td>
+            <td>{{ job.city }}</td>
+            <td>{{ job.date_posted }}</td>
+            <td>{{ job.date_found }}</td>
+            <td>
+                <button class="btn-apply {% if job.status == 'applied' %}applied{% endif %}"
+                        data-job-id="{{ job.id }}"
+                        data-applied="{{ 'true' if job.status == 'applied' else 'false' }}">
+                    {% if job.status == 'applied' %}Applied{% else %}Apply{% endif %}
+                </button>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+    <p class="no-jobs">No other listings this week.</p>
+    {% endif %}
+
+<script>
+    // ── Apply / Unapply toggle ──────────────────────────────────────────────
+    let appliedCount = {{ applied }};
+    const goal = {{ goal }};
+
+    function updateProgressBar() {
+        document.getElementById("applied-count").textContent = appliedCount;
+        const pct = goal > 0 ? Math.min(appliedCount / goal * 100, 100) : 0;
+        document.getElementById("progress-fill").style.width = pct + "%";
+    }
+
+    document.querySelectorAll(".btn-apply").forEach(btn => {
+        btn.addEventListener("click", function() {
+            const jobId   = this.dataset.jobId;
+            const isApplied = this.dataset.applied === "true";
+            const url     = isApplied ? `/unapply/${jobId}` : `/apply/${jobId}`;
+
+            fetch(url, { method: "POST" })
+            .then(r => r.json())
+            .then(data => {
+                const nowApplied = data.status === "applied";
+                this.dataset.applied = nowApplied ? "true" : "false";
+                this.textContent     = nowApplied ? "Applied" : "Apply";
+                this.classList.toggle("applied", nowApplied);
+                appliedCount += nowApplied ? 1 : -1;
+                updateProgressBar();
             });
         });
+    });
 
-        // Referral checkbox
-        document.querySelectorAll(".referral-check").forEach(checkbox => {
-            checkbox.addEventListener("change", function() {
-                const jobId = this.dataset.jobId;
-                fetch(`/update_referral/${jobId}`, {
-                    method: "POST",
-                    headers: {"Content-Type": "application/x-www-form-urlencoded"},
-                    body: `referral=${this.checked ? 1 : 0}`
-                });
-            });
+    // ── Sort & filter for Others table ─────────────────────────────────────
+    const sortSelect  = document.getElementById("sort-select");
+    const cityFilter  = document.getElementById("city-filter");
+    const othersTable = document.getElementById("others-table");
+
+    function applySort() {
+        if (!othersTable) return;
+        const sortKey  = sortSelect.value;
+        const cityVal  = cityFilter.value;
+        const tbody    = othersTable;
+        const rows     = Array.from(tbody.querySelectorAll("tr[data-job-id]"));
+
+        // Filter
+        rows.forEach(r => {
+            const show = !cityVal || r.dataset.city === cityVal;
+            r.style.display = show ? "" : "none";
         });
-    </script>
+
+        // Sort visible rows
+        const visible = rows.filter(r => r.style.display !== "none");
+        visible.sort((a, b) => {
+            const av = a.dataset[sortKey] || "";
+            const bv = b.dataset[sortKey] || "";
+            if (sortKey === "score") return Number(bv) - Number(av);
+            return bv.localeCompare(av); // dates: newest first
+        });
+
+        // Re-append in sorted order (header row stays put)
+        const headerRow = tbody.querySelector("tr:not([data-job-id])");
+        visible.forEach(r => tbody.appendChild(r));
+    }
+
+    sortSelect.addEventListener("change", applySort);
+    cityFilter.addEventListener("change", applySort);
+</script>
+
 </body>
 </html>

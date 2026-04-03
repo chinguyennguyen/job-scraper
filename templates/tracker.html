@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tracker</title>
+    <style>
+        body { font-family: sans-serif; max-width: 1300px; margin: 40px auto; padding: 0 20px; }
+
+        /* NAV */
+        nav { display: flex; gap: 24px; margin-bottom: 32px; align-items: center; }
+        nav a { color: #0066cc; text-decoration: none; font-size: 0.95em; }
+        nav a:hover { text-decoration: underline; }
+        nav .active { font-weight: bold; color: #333; pointer-events: none; }
+
+        /* STAT BOXES */
+        .stats { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+        .stat-box { background: #f0f0f0; padding: 14px 22px; border-radius: 8px; min-width: 110px; }
+        .stat-box label { font-size: 0.8em; color: #666; display: block; margin-bottom: 4px; }
+        .stat-box span { font-size: 1.8em; font-weight: bold; }
+        .stat-box.good { background: #d4edda; }
+        .stat-box.warn { background: #fff3cd; }
+        .stat-box.bad  { background: #ffd0d0; }
+
+        /* FILTER BAR */
+        .filter-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+        .filter-bar select {
+            padding: 5px 8px; border: 1px solid #ccc;
+            border-radius: 4px; font-size: 0.85em;
+        }
+
+        /* TABLE */
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #333; color: white; padding: 10px; text-align: left; font-size: 0.85em; }
+        td { padding: 8px 10px; border-bottom: 1px solid #eee; vertical-align: middle; font-size: 0.9em; }
+        tr:hover { background: #fafafa; }
+        a { color: #0066cc; }
+        .score { font-weight: bold; color: #333; }
+
+        /* STATUS DROPDOWN */
+        .status-select {
+            border: none; padding: 4px 8px; border-radius: 4px;
+            font-size: 0.82em; font-weight: bold; cursor: pointer;
+        }
+        .status-select.status-applied                  { background: #cce0ff; color: #0044aa; }
+        .status-select.status-interviewing             { background: #ccf0d4; color: #116622; }
+        .status-select.status-offer                    { background: #fef08a; color: #713f12; }
+        .status-select.status-rejected                 { background: #ffd0d0; color: #aa0000; }
+        .status-select.status-rejected_after_interview { background: #ffd0d0; color: #aa0000; }
+        .status-select.status-ghosted                  { background: #e2e8f0; color: #64748b; }
+        .status-select.status-untrack                  { background: #f5f5f5; color: #999; }
+
+        /* ADD JOB FORM */
+        .add-job-wrap { margin-bottom: 20px; }
+        .add-job-wrap summary { cursor: pointer; font-weight: bold; color: #0066cc; }
+        .add-job-form {
+            margin-top: 12px; display: grid;
+            grid-template-columns: 1fr 1fr; gap: 10px; max-width: 700px;
+        }
+        .add-job-form input {
+            padding: 6px 10px; border: 1px solid #ccc;
+            border-radius: 4px; font-size: 0.9em;
+        }
+        .btn-save {
+            background: #333; color: white; border: none;
+            padding: 8px 16px; border-radius: 4px; cursor: pointer;
+            align-self: end;
+        }
+        .btn-save:hover { background: #555; }
+
+        .no-jobs { color: #999; font-size: 0.9em; padding: 20px 0; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="/">Weekly Picks</a>
+        <span class="active">Tracker</span>
+        <a href="/stats">Stats</a>
+    </nav>
+
+    <!-- STAT BOXES -->
+    <div class="stats">
+        <div class="stat-box">
+            <label>Applied</label>
+            <span>{{ stats.applied }}</span>
+        </div>
+        <div class="stat-box">
+            <label>In progress</label>
+            <span>{{ stats.in_progress }}</span>
+        </div>
+        <div class="stat-box good">
+            <label>Interviewing</label>
+            <span>{{ stats.interviewing }}</span>
+        </div>
+        <div class="stat-box bad">
+            <label>Rejected</label>
+            <span>{{ stats.rejected }}</span>
+        </div>
+        <div class="stat-box warn">
+            <label>Ghosted</label>
+            <span>{{ stats.ghosted }}</span>
+        </div>
+    </div>
+
+    <!-- ADD JOB -->
+    <details class="add-job-wrap">
+        <summary>+ Add job manually</summary>
+        <form method="post" action="/add_job" class="add-job-form">
+            <input name="title"        placeholder="Job title *" required>
+            <input name="company"      placeholder="Company *"   required>
+            <input name="city"         placeholder="City">
+            <input name="job_url"      placeholder="Job URL">
+            <label style="font-size: 0.85em; color: #555; align-self: center;">
+                Date applied
+                <input name="date_applied" type="date"
+                       style="display:block; margin-top:2px;">
+            </label>
+            <button type="submit" class="btn-save">Save job</button>
+        </form>
+    </details>
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+        <label style="font-size:0.85em; color:#555;">Filter</label>
+        <select id="status-filter-select" onchange="filterByStatus(this.value)">
+            <option value="">All</option>
+            <option value="applied"                  {% if status_filter == 'applied' %}selected{% endif %}>Applied</option>
+            <option value="interviewing"             {% if status_filter == 'interviewing' %}selected{% endif %}>Interviewing</option>
+            <option value="offer"                    {% if status_filter == 'offer' %}selected{% endif %}>Offer</option>
+            <option value="rejected"                 {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
+            <option value="rejected_after_interview" {% if status_filter == 'rejected_after_interview' %}selected{% endif %}>Rejected (after interview)</option>
+            <option value="ghosted"                  {% if status_filter == 'ghosted' %}selected{% endif %}>Ghosted</option>
+        </select>
+    </div>
+
+    <!-- JOBS TABLE -->
+    {% if jobs %}
+    <table>
+        <tr>
+            <th>Score</th>
+            <th>Title</th>
+            <th>Company</th>
+            <th>City</th>
+            <th>Applied</th>
+            <th>Status</th>
+            <th>Referral</th>
+        </tr>
+        {% for job in jobs %}
+        <tr id="row-{{ job.id }}">
+            <td class="score">{{ job.score }}</td>
+            <td><a href="{{ job.job_url }}" target="_blank">{{ job.title }}</a></td>
+            <td>{{ job.company }}</td>
+            <td>{{ job.city }}</td>
+            <td class="applied-date">{{ job.applied_date or '' }}</td>
+            <td>
+                <select class="status-select status-{{ job.status }}"
+                        data-job-id="{{ job.id }}"
+                        data-date-found="{{ job.date_found }}">
+                    <option value="applied"                  {% if job.status == 'applied' %}selected{% endif %}>applied</option>
+                    <option value="interviewing"             {% if job.status == 'interviewing' %}selected{% endif %}>interviewing</option>
+                    <option value="offer"                    {% if job.status == 'offer' %}selected{% endif %}>offer</option>
+                    <option value="rejected"                 {% if job.status == 'rejected' %}selected{% endif %}>rejected</option>
+                    <option value="rejected_after_interview" {% if job.status == 'rejected_after_interview' %}selected{% endif %}>rejected (after interview)</option>
+                    <option value="ghosted"                  {% if job.status == 'ghosted' %}selected{% endif %}>ghosted</option>
+                    <option disabled>──────────</option>
+                    <option value="untrack">untrack</option>
+                </select>
+            </td>
+            <td>
+                <input type="checkbox" class="referral-check"
+                       data-job-id="{{ job.id }}"
+                       {% if job.referral %}checked{% endif %}>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+    <p class="no-jobs">No applications yet — apply to jobs from the <a href="/">Weekly Picks</a> page.</p>
+    {% endif %}
+
+<script>
+    // ── Filter by status (client-side, no reload) ───────────────────────────
+    function filterByStatus(val) {
+        document.querySelectorAll("tr[id^='row-']").forEach(row => {
+            const select = row.querySelector(".status-select");
+            const status = select ? select.dataset.currentStatus || select.value : "";
+            row.style.display = (!val || status === val) ? "" : "none";
+        });
+    }
+
+    // ── Status dropdown ─────────────────────────────────────────────────────
+    document.querySelectorAll(".status-select").forEach(select => {
+        // Store initial status for client-side filtering
+        select.dataset.currentStatus = select.value;
+
+        select.addEventListener("change", function() {
+            const jobId     = this.dataset.jobId;
+            const newStatus = this.value;
+            const dateFound = this.dataset.dateFound;
+
+            if (newStatus === "untrack") {
+                handleUntrack(jobId, dateFound, this);
+                return;
+            }
+
+            fetch(`/update_status/${jobId}`, {
+                method: "POST",
+                headers: {"Content-Type": "application/x-www-form-urlencoded"},
+                body: `force_status=${newStatus}`
+            })
+            .then(r => r.json())
+            .then(data => {
+                this.className = `status-select status-${data.status}`;
+                this.dataset.currentStatus = data.status;
+                const row = this.closest("tr");
+                const appliedCell = row.querySelector(".applied-date");
+                if (appliedCell && data.applied_date) {
+                    appliedCell.textContent = data.applied_date;
+                }
+            });
+        });
+    });
+
+    // ── Untrack logic ───────────────────────────────────────────────────────
+    function handleUntrack(jobId, dateFound, selectEl) {
+        const today   = new Date();
+        today.setHours(0, 0, 0, 0);
+        const found   = new Date(dateFound);
+        found.setHours(0, 0, 0, 0);
+        const daysOld = (today - found) / (1000 * 60 * 60 * 24);
+        const url     = daysOld < 7 ? `/unapply/${jobId}` : `/hide/${jobId}`;
+
+        fetch(url, { method: "POST" })
+        .then(() => {
+            // Just style the row as untracked — it disappears on next refresh
+            selectEl.className = "status-select status-untrack";
+            const row = document.getElementById(`row-${jobId}`);
+            if (row) row.style.opacity = "0.4";
+        });
+    }   
+
+    // ── Referral checkbox ───────────────────────────────────────────────────
+    document.querySelectorAll(".referral-check").forEach(checkbox => {
+        checkbox.addEventListener("change", function() {
+            fetch(`/update_referral/${this.dataset.jobId}`, {
+                method: "POST",
+                headers: {"Content-Type": "application/x-www-form-urlencoded"},
+                body: `referral=${this.checked ? 1 : 0}`
+            });
+        });
+    });
+</script>
+
+</body>
+</html>

@@ -52,6 +52,7 @@ scoring:
     - data scientist
     - machine learning
     - research scientist
+    - analyst
 
   # Each match adds +1 to the score
   priority_keywords:
@@ -59,12 +60,13 @@ scoring:
     - causal inference
     - experimentation
     - forecasting
-    - bayesian
-    - phd
-    - economics
     - statistics
 
-  # These companies get +2 bonus points
+  # You have a contact here → +3 bonus points (highest priority)
+  referral_companies:
+    - example company
+
+  # Strong target companies → +1 bonus points
   priority_companies:
     - google
     - meta
@@ -88,6 +90,7 @@ scoring:
   senior_title_keywords:
     - principal
     - vp
+    - staff
 
 
 # -------------------------------------------------------
