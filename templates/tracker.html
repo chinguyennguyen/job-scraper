@@ -221,7 +221,7 @@
     });
 
     // ── Untrack logic ───────────────────────────────────────────────────────
-    function handleUntrack(jobId, dateFound, selectEl) {
+        function handleUntrack(jobId, dateFound, selectEl) {
         const today   = new Date();
         today.setHours(0, 0, 0, 0);
         const found   = new Date(dateFound);
@@ -231,12 +231,11 @@
 
         fetch(url, { method: "POST" })
         .then(() => {
-            // Just style the row as untracked — it disappears on next refresh
             selectEl.className = "status-select status-untrack";
             const row = document.getElementById(`row-${jobId}`);
             if (row) row.style.opacity = "0.4";
         });
-    }   
+    }                                          // ← this closing brace was missing
 
     // ── Referral checkbox ───────────────────────────────────────────────────
     document.querySelectorAll(".referral-check").forEach(checkbox => {
